@@ -50,7 +50,7 @@ router.put('/:hootId', verifyToken, async (req, res) => {
         const hoot = await Hoot.findById(req.params.hootId);
         // make sure request user and author are the same person
         if(!hoot.author.equals(req.user._id)) { // if there are NOT equal
-            res.status(403).send('You\'re not allowed to do that!');
+            return res.status(403).send('You\'re not allowed to do that!');
         }
 
         const updatedHoot = await Hoot.findByIdAndUpdate(
@@ -62,6 +62,23 @@ router.put('/:hootId', verifyToken, async (req, res) => {
         // {new: true } returns the document AFTER the update
         updatedHoot._doc.author = req.user // a great alternative since we don't have .populate
         res.status(200).json(updatedHoot);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// DELETE /hoots/:hootId DELETE Route "Protected"
+router.delete('/:hootId', verifyToken, async (req, res) => {
+    try {
+        const hoot = await Hoot.findById(req.params.hootId);
+
+        if(!hoot.author.equals(req.user._id)) {
+            return res.status(403).send('You\'re not allowed to do that!');
+        }
+
+        const deletedHoot = await Hoot.findByIdAndDelete(req.params.hootId);
+        res.status(200).json(deletedHoot);
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: error.message });
